@@ -1,4 +1,5 @@
 "use server";
+
 import { z } from "zod";
 import { sql } from "@vercel/postgres";
 import { revalidatePath } from "next/cache";
@@ -19,9 +20,9 @@ const FormSchema = z.object({
   }),
   date: z.string(),
 });
-const UpdateInvoice = FormSchema.omit({ id: true, date: true });
 
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
+const UpdateInvoice = FormSchema.omit({ date: true, id: true });
 
 export type State = {
   errors?: {
@@ -32,9 +33,8 @@ export type State = {
   message?: string | null;
 };
 
-// Create Invoice
 export async function createInvoice(prevState: State, formData: FormData) {
-  // Validate form using Zod
+  // Validate form fields using Zod
   const validatedFields = CreateInvoice.safeParse({
     customerId: formData.get("customerId"),
     amount: formData.get("amount"),
@@ -72,7 +72,6 @@ export async function createInvoice(prevState: State, formData: FormData) {
   redirect("/dashboard/invoices");
 }
 
-// Update Invoice
 export async function updateInvoice(
   id: string,
   prevState: State,
@@ -108,13 +107,11 @@ export async function updateInvoice(
   redirect("/dashboard/invoices");
 }
 
-// Delete Invoice
 export async function deleteInvoice(id: string) {
   await sql`DELETE FROM invoices WHERE id = ${id}`;
   revalidatePath("/dashboard/invoices");
 }
 
-//Authentication
 export async function authenticate(
   prevState: string | undefined,
   formData: FormData
